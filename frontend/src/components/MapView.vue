@@ -25,9 +25,77 @@ onMounted(async () => {
 
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
 
-  await store.loadOrigins()
+  // スタイル読み込みとデータ取得を並行して待つ
+  await Promise.all([
+    store.loadOrigins(),
+    new Promise<void>(resolve => map!.on('load', resolve)),
+  ])
+
+  try {
+    customizeLabels()
+  } catch (e) {
+    console.warn('[MapView] customizeLabels failed:', e)
+  }
   addMarkers()
 })
+
+function customizeLabels() {
+  if (!map) return
+
+  // ベースマップの place / poi ラベルをすべて非表示
+  for (const layer of map.getStyle().layers) {
+    if (layer.type !== 'symbol') continue
+    const sourceLayer = (layer as any)['source-layer']
+    if (sourceLayer === 'place' || sourceLayer === 'poi' || sourceLayer === 'housenumber') {
+      map.setLayoutProperty(layer.id, 'visibility', 'none')
+    }
+  }
+
+  // 残る道路名などを英語（name:en）に統一
+  for (const layer of map.getStyle().layers) {
+    if (layer.type !== 'symbol') continue
+    const layout = (layer.layout ?? {}) as Record<string, unknown>
+    if ('text-field' in layout) {
+      map.setLayoutProperty(layer.id, 'text-field', [
+        'coalesce',
+        ['get', 'name:en'],
+        ['get', 'name'],
+      ])
+    }
+  }
+
+  // データがある国だけを独自ラベルで表示
+  map.addSource('origin-country-labels', {
+    type: 'geojson',
+    data: {
+      type: 'FeatureCollection',
+      features: store.origins.map(o => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [o.longitude, o.latitude] },
+        properties: { name: o.country },
+      })),
+    },
+  })
+
+  map.addLayer({
+    id: 'origin-country-label',
+    type: 'symbol',
+    source: 'origin-country-labels',
+    layout: {
+      'text-field': ['get', 'name'],
+      'text-size': ['interpolate', ['linear'], ['zoom'], 1, 10, 5, 14],
+      'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+      'text-anchor': 'top',
+      'text-offset': [0, 1.5],
+      'text-allow-overlap': false,
+    },
+    paint: {
+      'text-color': '#1a3a5c',
+      'text-halo-color': 'rgba(255,255,255,0.85)',
+      'text-halo-width': 1.5,
+    },
+  })
+}
 
 function addMarkers() {
   if (!map) return

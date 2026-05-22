@@ -1,8 +1,8 @@
 <template>
   <header class="sticky top-0 z-50 bg-coffee-50/80 backdrop-blur border-b border-coffee-200">
     <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-      <RouterLink to="/" class="flex items-center">
-        <img src="/beanatlas-header.png" alt="BeanAtlas" class="h-10" />
+      <RouterLink to="/" class="flex items-center h-full py-1.5">
+        <img src="/beanatlas-header.png" alt="BeanAtlas" class="h-full w-auto" />
       </RouterLink>
       <nav class="flex items-center gap-6 text-sm text-coffee-500">
         <RouterLink to="/" class="hover:text-coffee-600 transition-colors">Map</RouterLink>

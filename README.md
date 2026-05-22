@@ -5,6 +5,8 @@ Explore where your coffee comes from — click any origin to discover its flavor
 
 🌐 **[beanatlas.net](https://beanatlas.net)**
 
+![BeanAtlas preview](docs/preview.png)
+
 ---
 
 ## Features
