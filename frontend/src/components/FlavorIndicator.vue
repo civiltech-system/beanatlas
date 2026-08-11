@@ -4,7 +4,7 @@ defineProps<{ label: string; value: number }>()
 
 <template>
   <div class="flex items-center gap-3">
-    <span class="text-sm text-coffee-500 w-24">{{ label }}</span>
+    <span class="text-sm text-coffee-500 w-16 flex-shrink-0">{{ label }}</span>
     <div class="flex gap-1">
       <span
         v-for="i in 5"

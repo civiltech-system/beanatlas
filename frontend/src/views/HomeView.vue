@@ -1,18 +1,58 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import MapView from '@/components/MapView.vue'
 import FlavorIndicator from '@/components/FlavorIndicator.vue'
 import FlavorRadar from '@/components/FlavorRadar.vue'
 import type { Origin } from '@/types/origin'
+import { useLocale } from '@/composables/useLocale'
+import { useOriginsStore } from '@/stores/origins'
 
 const selected = ref<Origin | null>(null)
+const { locale, t, translateTerm } = useLocale()
+const store = useOriginsStore()
+const mapRef = ref<InstanceType<typeof MapView> | null>(null)
+
+const searchQuery = ref('')
+const showDropdown = ref(false)
+
+onMounted(() => store.loadOrigins())
 
 function onSelect(origin: Origin) {
   selected.value = origin
+  searchQuery.value = ''
+  showDropdown.value = false
 }
 
 function closePanel() {
   selected.value = null
+}
+
+const searchResults = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return []
+  return store.origins
+    .filter(o =>
+      o.country.toLowerCase().includes(q) ||
+      o.country_ja.includes(q) ||
+      o.region.toLowerCase().includes(q),
+    )
+    .slice(0, 6)
+})
+
+function selectFromSearch(origin: Origin) {
+  mapRef.value?.flyToOrigin(origin)
+  selected.value = origin
+  searchQuery.value = ''
+  showDropdown.value = false
+}
+
+function onSearchFocus() {
+  showDropdown.value = true
+}
+
+function onSearchBlur() {
+  // 少し遅らせてクリックイベントを先に処理させる
+  setTimeout(() => { showDropdown.value = false }, 150)
 }
 </script>
 
@@ -21,7 +61,49 @@ function closePanel() {
   <div class="relative" style="height: calc(100vh - 56px);">
 
     <!-- マップ -->
-    <MapView class="absolute inset-0" @select="onSelect" />
+    <MapView ref="mapRef" class="absolute inset-0" @select="onSelect" />
+
+    <!-- 7. マップ検索ボックス -->
+    <div class="absolute top-3 left-3 z-10 w-64">
+      <div class="relative">
+        <div class="flex items-center bg-white rounded-xl shadow-md px-3 py-2 gap-2">
+          <svg class="w-4 h-4 text-coffee-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+          </svg>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="産地を検索..."
+            class="flex-1 text-sm text-coffee-600 placeholder:text-coffee-300 outline-none bg-transparent"
+            @focus="onSearchFocus"
+            @blur="onSearchBlur"
+          />
+          <button
+            v-if="searchQuery"
+            @click="searchQuery = ''"
+            class="text-coffee-300 hover:text-coffee-500 transition-colors text-base leading-none"
+          >✕</button>
+        </div>
+
+        <!-- 検索結果ドロップダウン -->
+        <div
+          v-if="showDropdown && searchResults.length > 0"
+          class="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg overflow-hidden"
+        >
+          <button
+            v-for="origin in searchResults"
+            :key="origin.id"
+            @mousedown.prevent="selectFromSearch(origin)"
+            class="w-full text-left px-4 py-2.5 hover:bg-coffee-50 transition-colors border-b border-coffee-50 last:border-0"
+          >
+            <p class="text-sm font-medium text-coffee-600">
+              {{ locale === 'ja' ? origin.country_ja : origin.country }}
+            </p>
+            <p class="text-xs text-coffee-400">{{ origin.region }}</p>
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- 左パネル -->
     <Transition
@@ -46,7 +128,9 @@ function closePanel() {
               aria-label="Close"
             >✕</button>
           </div>
-          <h2 class="text-2xl font-serif font-bold">{{ selected.country }}</h2>
+          <h2 class="text-2xl font-serif font-bold">
+            {{ locale === 'ja' ? selected.country_ja : selected.country }}
+          </h2>
           <p class="text-coffee-300 text-sm mt-1">{{ selected.altitude_min }}–{{ selected.altitude_max }}m · {{ selected.climate }}</p>
         </div>
 
@@ -55,7 +139,7 @@ function closePanel() {
 
           <!-- フレーバーノート -->
           <div>
-            <p class="text-xs font-semibold text-coffee-400 uppercase tracking-wide mb-2">Flavor Notes</p>
+            <p class="text-xs font-semibold text-coffee-400 uppercase tracking-wide mb-2">{{ t('panel.flavorNotes') }}</p>
             <div class="flex flex-wrap gap-1.5">
               <span
                 v-for="note in selected.flavor_notes"
@@ -67,7 +151,7 @@ function closePanel() {
 
           <!-- フレーバープロファイル -->
           <div>
-            <p class="text-xs font-semibold text-coffee-400 uppercase tracking-wide mb-3">Flavor Profile</p>
+            <p class="text-xs font-semibold text-coffee-400 uppercase tracking-wide mb-3">{{ t('panel.flavorProfile') }}</p>
             <FlavorRadar
               :acidity="selected.acidity"
               :bitterness="selected.bitterness"
@@ -76,34 +160,36 @@ function closePanel() {
               class="mb-3 px-4"
             />
             <div class="space-y-2.5">
-              <FlavorIndicator label="Acidity" :value="selected.acidity" />
-              <FlavorIndicator label="Bitterness" :value="selected.bitterness" />
-              <FlavorIndicator label="Sweetness" :value="selected.sweetness" />
-              <FlavorIndicator label="Body" :value="selected.body" />
+              <FlavorIndicator :label="t('flavor.acidity')" :value="selected.acidity" />
+              <FlavorIndicator :label="t('flavor.bitterness')" :value="selected.bitterness" />
+              <FlavorIndicator :label="t('flavor.sweetness')" :value="selected.sweetness" />
+              <FlavorIndicator :label="t('flavor.body')" :value="selected.body" />
             </div>
           </div>
 
           <!-- 基本情報 -->
           <div class="grid grid-cols-2 gap-2">
             <div class="bg-white rounded-xl p-3">
-              <p class="text-xs text-coffee-400 mb-1">Varieties</p>
-              <p class="text-xs text-coffee-600 font-medium">{{ selected.varieties.join(', ') || '—' }}</p>
+              <p class="text-xs text-coffee-400 mb-1">{{ t('panel.varieties') }}</p>
+              <p class="text-xs text-coffee-600 font-medium">{{ selected.varieties.map(translateTerm).join(', ') || '—' }}</p>
             </div>
             <div class="bg-white rounded-xl p-3">
-              <p class="text-xs text-coffee-400 mb-1">Process</p>
-              <p class="text-xs text-coffee-600 font-medium">{{ selected.process_methods.join(', ') || '—' }}</p>
+              <p class="text-xs text-coffee-400 mb-1">{{ t('panel.process') }}</p>
+              <p class="text-xs text-coffee-600 font-medium">{{ selected.process_methods.map(translateTerm).join(', ') || '—' }}</p>
             </div>
           </div>
 
           <!-- 説明 -->
-          <p class="text-sm text-coffee-600 leading-relaxed">{{ selected.description }}</p>
+          <p class="text-sm text-coffee-600 leading-relaxed">
+            {{ locale === 'ja' ? selected.description_ja : selected.description }}
+          </p>
 
           <!-- 詳細ページリンク -->
           <RouterLink
             :to="`/origins/${selected.slug}`"
             class="mt-auto block text-center bg-coffee-600 text-white py-2.5 rounded-full text-sm font-medium hover:bg-coffee-500 transition-colors"
           >
-            View Full Profile →
+            {{ t('panel.viewFull') }}
           </RouterLink>
         </div>
       </aside>

@@ -64,7 +64,7 @@ function customizeLabels() {
     }
   }
 
-  // データがある国だけを独自ラベルで表示
+  // データがある国だけを独自ラベルで表示（sub_region・farm も properties に含める）
   map.addSource('origin-country-labels', {
     type: 'geojson',
     data: {
@@ -72,19 +72,24 @@ function customizeLabels() {
       features: store.origins.map(o => ({
         type: 'Feature',
         geometry: { type: 'Point', coordinates: [o.longitude, o.latitude] },
-        properties: { name: o.country },
+        properties: {
+          name: o.country,
+          sub_region: o.sub_region ?? null,
+          farm: o.farm ?? null,
+        },
       })),
     },
   })
 
+  // 国レベルラベル（ズームアウト時）
   map.addLayer({
     id: 'origin-country-label',
     type: 'symbol',
     source: 'origin-country-labels',
+    maxzoom: 5,
     layout: {
       'text-field': ['get', 'name'],
-      'text-size': ['interpolate', ['linear'], ['zoom'], 1, 10, 5, 14],
-      'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+      'text-size': ['interpolate', ['linear'], ['zoom'], 1, 10, 4.9, 14],
       'text-anchor': 'top',
       'text-offset': [0, 1.5],
       'text-allow-overlap': false,
@@ -92,6 +97,32 @@ function customizeLabels() {
     paint: {
       'text-color': '#1a3a5c',
       'text-halo-color': 'rgba(255,255,255,0.85)',
+      'text-halo-width': 1.5,
+    },
+  })
+
+  // サブリージョン・農園レベルラベル（ズームイン時）
+  map.addLayer({
+    id: 'origin-detail-label',
+    type: 'symbol',
+    source: 'origin-country-labels',
+    minzoom: 5,
+    layout: {
+      'text-field': [
+        'concat',
+        ['get', 'name'],
+        ['case', ['!=', ['get', 'sub_region'], null], [
+          'concat', '\n', ['get', 'sub_region']
+        ], ''],
+      ],
+      'text-size': ['interpolate', ['linear'], ['zoom'], 5, 12, 9, 16],
+      'text-anchor': 'top',
+      'text-offset': [0, 1.5],
+      'text-allow-overlap': false,
+    },
+    paint: {
+      'text-color': '#1a3a5c',
+      'text-halo-color': 'rgba(255,255,255,0.9)',
       'text-halo-width': 1.5,
     },
   })
@@ -149,6 +180,17 @@ function addMarkers() {
     markers.push(marker)
   }
 }
+
+function flyToOrigin(origin: Origin) {
+  if (!map) return
+  map.flyTo({
+    center: [origin.longitude, origin.latitude],
+    zoom: 4,
+    duration: 1200,
+  })
+}
+
+defineExpose({ flyToOrigin })
 
 onUnmounted(() => {
   markers.forEach(m => m.remove())

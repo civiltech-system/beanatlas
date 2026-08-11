@@ -1,23 +1,27 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useLocale } from '@/composables/useLocale'
 
 const props = defineProps<{
   acidity: number
   bitterness: number
   sweetness: number
   body: number
+  showValues?: boolean
 }>()
+
+const { t } = useLocale()
 
 const cx = 80
 const cy = 80
 const R = 52
 
-const axes = [
-  { label: 'Acidity' },
-  { label: 'Bitterness' },
-  { label: 'Sweetness' },
-  { label: 'Body' },
-]
+const axes = computed(() => [
+  { label: t('flavor.acidity'),   value: props.acidity },
+  { label: t('flavor.bitterness'), value: props.bitterness },
+  { label: t('flavor.sweetness'), value: props.sweetness },
+  { label: t('flavor.body'),      value: props.body },
+])
 
 const values = computed(() => [props.acidity, props.bitterness, props.sweetness, props.body])
 
@@ -40,15 +44,15 @@ const dataPolygon = computed(() =>
 
 const labelR = R + 17
 const labelConfig = [
-  { anchor: 'middle', baseline: 'auto',    dy: -4 },
-  { anchor: 'start',  baseline: 'middle',  dy: 0  },
-  { anchor: 'middle', baseline: 'hanging', dy: 4  },
-  { anchor: 'end',    baseline: 'middle',  dy: 0  },
+  { anchor: 'middle', baseline: 'auto',    dy: -4,  valueDy: -16 },
+  { anchor: 'start',  baseline: 'middle',  dy: 0,   valueDy: 12  },
+  { anchor: 'middle', baseline: 'hanging', dy: 4,   valueDy: 16  },
+  { anchor: 'end',    baseline: 'middle',  dy: 0,   valueDy: 12  },
 ]
 </script>
 
 <template>
-  <svg viewBox="0 0 160 160" class="w-full" style="overflow: visible">
+  <svg viewBox="-30 -28 220 216" class="w-full">
     <!-- Grid rings -->
     <polygon
       v-for="level in [1, 2, 3, 4, 5]"
@@ -97,5 +101,19 @@ const labelConfig = [
       fill="#7A5C3A"
       font-family="sans-serif"
     >{{ axis.label }}</text>
+    <!-- Values (detail view only) -->
+    <text
+      v-if="showValues"
+      v-for="(axis, i) in axes"
+      :key="`val-${i}`"
+      :x="point(i, labelR / R).x"
+      :y="point(i, labelR / R).y + labelConfig[i].dy + labelConfig[i].valueDy"
+      :text-anchor="labelConfig[i].anchor"
+      dominant-baseline="middle"
+      font-size="7"
+      font-weight="bold"
+      fill="#4A7C59"
+      font-family="sans-serif"
+    >{{ axis.value }}/5</text>
   </svg>
 </template>
