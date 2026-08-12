@@ -5,6 +5,7 @@ import type { Origin } from '@/types/origin'
 import { fetchOrigin } from '@/api/origins'
 import FlavorIndicator from '@/components/FlavorIndicator.vue'
 import FlavorRadar from '@/components/FlavorRadar.vue'
+import { usePageMeta } from '@/composables/usePageMeta'
 
 const route = useRoute()
 const origin = ref<Origin | null>(null)
@@ -18,6 +19,18 @@ onMounted(async () => {
     error.value = 'Origin not found'
   } finally {
     loading.value = false
+  }
+})
+
+usePageMeta(() => {
+  const path = `/origins/${route.params.slug}`
+  if (!origin.value) {
+    return { title: 'コーヒー産地情報', description: '世界のコーヒー産地の詳細情報。', path }
+  }
+  return {
+    title: `${origin.value.country_ja}（${origin.value.country}）のコーヒー産地情報`,
+    description: origin.value.description_ja,
+    path,
   }
 })
 </script>

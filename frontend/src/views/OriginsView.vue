@@ -2,9 +2,17 @@
 import { onMounted } from 'vue'
 import { useOriginsStore } from '@/stores/origins'
 import OriginCard from '@/components/OriginCard.vue'
+import { usePageMeta } from '@/composables/usePageMeta'
 
 const store = useOriginsStore()
 onMounted(() => store.loadOrigins())
+
+usePageMeta({
+  title: 'コーヒー産地一覧',
+  description:
+    'エチオピア、コロンビア、ブラジルなど世界各地のコーヒー産地を一覧で紹介。産地ごとの気候・標高・フレーバープロファイルを比較できます。',
+  path: '/origins',
+})
 </script>
 
 <template>
