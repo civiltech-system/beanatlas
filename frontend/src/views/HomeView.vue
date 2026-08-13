@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import MapView from '@/components/MapView.vue'
 import FlavorIndicator from '@/components/FlavorIndicator.vue'
 import FlavorRadar from '@/components/FlavorRadar.vue'
+import { usePageMeta } from '@/composables/usePageMeta'
 import type { Origin } from '@/types/origin'
 import { useLocale } from '@/composables/useLocale'
 import { useOriginsStore } from '@/stores/origins'
@@ -16,6 +17,13 @@ const searchQuery = ref('')
 const showDropdown = ref(false)
 
 onMounted(() => store.loadOrigins())
+
+usePageMeta({
+  title: 'コーヒー産地マップ - 世界のコーヒー生産地を探る',
+  description:
+    '世界のコーヒー産地をインタラクティブな地図で探索。産地ごとのフレーバー、品種、精製方法、標高などのデータを一目で確認できます。',
+  path: '/',
+})
 
 function onSelect(origin: Origin) {
   selected.value = origin
