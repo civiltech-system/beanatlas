@@ -5,11 +5,14 @@ import type { Origin } from '@/types/origin'
 import { fetchOrigin } from '@/api/origins'
 import FlavorIndicator from '@/components/FlavorIndicator.vue'
 import FlavorRadar from '@/components/FlavorRadar.vue'
+import { usePageMeta } from '@/composables/usePageMeta'
+import { useLocale } from '@/composables/useLocale'
 
 const route = useRoute()
 const origin = ref<Origin | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
+const { translateTerm } = useLocale()
 
 onMounted(async () => {
   try {
@@ -18,6 +21,25 @@ onMounted(async () => {
     error.value = 'Origin not found'
   } finally {
     loading.value = false
+  }
+})
+
+usePageMeta(() => {
+  const o = origin.value
+  if (!o) {
+    return { title: '産地情報', description: '世界のコーヒー産地の詳細情報。', path: route.path }
+  }
+  const region = translateTerm(o.region)
+  const varieties = o.varieties.slice(0, 3).map(translateTerm).join('、')
+  const processes = o.process_methods.slice(0, 2).map(translateTerm).join('、')
+  const notes = o.flavor_notes.slice(0, 3).map(translateTerm).join('、')
+  return {
+    title: `${o.country_ja}のコーヒー産地ガイド｜品種・精製・フレーバー`,
+    description:
+      `${o.country_ja}（${region}）、標高${o.altitude_min}〜${o.altitude_max}mのコーヒー産地情報。` +
+      `品種は${varieties || '複数種'}、精製方法は${processes || '複数種'}。` +
+      `フレーバーノート: ${notes || '多彩な味わい'}。`,
+    path: route.path,
   }
 })
 </script>

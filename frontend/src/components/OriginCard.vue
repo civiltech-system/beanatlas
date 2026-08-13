@@ -3,7 +3,7 @@ import type { Origin } from '@/types/origin'
 import { useLocale } from '@/composables/useLocale'
 
 defineProps<{ origin: Origin }>()
-const { locale } = useLocale()
+const { locale, translateTerm } = useLocale()
 </script>
 
 <template>
