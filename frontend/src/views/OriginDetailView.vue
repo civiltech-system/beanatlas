@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import type { Origin } from '@/types/origin'
 import { fetchOrigin } from '@/api/origins'
+import { useOriginsStore } from '@/stores/origins'
 import FlavorIndicator from '@/components/FlavorIndicator.vue'
 import FlavorRadar from '@/components/FlavorRadar.vue'
+import OriginCard from '@/components/OriginCard.vue'
 import { usePageMeta } from '@/composables/usePageMeta'
 import { useLocale } from '@/composables/useLocale'
 
@@ -13,6 +15,7 @@ const origin = ref<Origin | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 const { translateTerm } = useLocale()
+const originsStore = useOriginsStore()
 
 onMounted(async () => {
   try {
@@ -22,6 +25,23 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+  originsStore.loadOrigins()
+})
+
+const relatedOrigins = computed(() => {
+  const current = origin.value
+  if (!current) return []
+  return originsStore.origins
+    .filter((o) => o.slug !== current.slug)
+    .map((o) => {
+      const sharedFlavors = o.flavor_notes.filter((note) => current.flavor_notes.includes(note)).length
+      const sameRegion = o.region === current.region ? 2 : 0
+      return { origin: o, score: sameRegion + sharedFlavors }
+    })
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map((entry) => entry.origin)
 })
 
 usePageMeta(() => {
@@ -104,6 +124,14 @@ usePageMeta(() => {
       <!-- Description -->
       <div class="prose prose-coffee max-w-none mb-8">
         <p class="text-coffee-600 leading-relaxed">{{ origin.description }}</p>
+      </div>
+
+      <!-- Related Origins -->
+      <div v-if="relatedOrigins.length" class="mb-8">
+        <h2 class="text-lg font-semibold text-coffee-600 mb-3">似た産地</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <OriginCard v-for="related in relatedOrigins" :key="related.id" :origin="related" />
+        </div>
       </div>
 
       <!-- Back -->
