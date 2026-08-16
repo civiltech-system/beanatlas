@@ -1,0 +1,24 @@
+{
+  "name": "BeanAtlas - コーヒー産地マップ",
+  "short_name": "BeanAtlas",
+  "description": "世界のコーヒー産地を地図で探索できるアプリ",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#789446",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
