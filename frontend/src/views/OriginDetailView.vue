@@ -8,7 +8,10 @@ import FlavorIndicator from '@/components/FlavorIndicator.vue'
 import FlavorRadar from '@/components/FlavorRadar.vue'
 import OriginCard from '@/components/OriginCard.vue'
 import { usePageMeta } from '@/composables/usePageMeta'
+import { useJsonLd } from '@/composables/useJsonLd'
 import { useLocale } from '@/composables/useLocale'
+
+const SITE_URL = 'https://beanatlas.net'
 
 const route = useRoute()
 const origin = ref<Origin | null>(null)
@@ -60,6 +63,40 @@ usePageMeta(() => {
       `品種は${varieties || '複数種'}、精製方法は${processes || '複数種'}。` +
       `フレーバーノート: ${notes || '多彩な味わい'}。`,
     path: route.path,
+  }
+})
+
+useJsonLd(() => {
+  const o = origin.value
+  if (!o) return null
+  const pageUrl = `${SITE_URL}${route.path}`
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'BeanAtlas', item: `${SITE_URL}/` },
+          { '@type': 'ListItem', position: 2, name: '産地一覧', item: `${SITE_URL}/origins` },
+          { '@type': 'ListItem', position: 3, name: o.country_ja, item: pageUrl },
+        ],
+      },
+      {
+        '@type': 'Place',
+        name: `${o.country_ja}のコーヒー産地`,
+        description: o.description_ja,
+        url: pageUrl,
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: o.latitude,
+          longitude: o.longitude,
+        },
+        containedInPlace: {
+          '@type': 'Country',
+          name: o.country_ja,
+        },
+      },
+    ],
   }
 })
 </script>

@@ -4,6 +4,7 @@ import MapView from '@/components/MapView.vue'
 import FlavorIndicator from '@/components/FlavorIndicator.vue'
 import FlavorRadar from '@/components/FlavorRadar.vue'
 import { usePageMeta } from '@/composables/usePageMeta'
+import { useJsonLd } from '@/composables/useJsonLd'
 import type { Origin } from '@/types/origin'
 import { useLocale } from '@/composables/useLocale'
 import { useOriginsStore } from '@/stores/origins'
@@ -23,6 +24,15 @@ usePageMeta({
   description:
     '世界のコーヒー産地をインタラクティブな地図で探索。産地ごとのフレーバー、品種、精製方法、標高などのデータを一目で確認できます。',
   path: '/',
+})
+
+useJsonLd({
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'BeanAtlas',
+  url: 'https://beanatlas.net/',
+  description: '世界のコーヒー産地をインタラクティブな地図で探索できるコーヒー産地アトラス。',
+  inLanguage: 'ja',
 })
 
 function onSelect(origin: Origin) {

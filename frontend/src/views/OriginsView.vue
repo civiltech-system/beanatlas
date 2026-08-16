@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { useOriginsStore } from '@/stores/origins'
 import OriginCard from '@/components/OriginCard.vue'
 import { usePageMeta } from '@/composables/usePageMeta'
+import { useJsonLd } from '@/composables/useJsonLd'
 import { useLocale } from '@/composables/useLocale'
 import { useOriginFilter, type SortKey } from '@/composables/useOriginFilter'
 
@@ -22,6 +23,15 @@ usePageMeta({
   description:
     '世界各国のコーヒー産地を品種・精製方法・フレーバー・焙煎度で絞り込んで比較。標高や地域ごとの特徴も一覧で確認できます。',
   path: '/origins',
+})
+
+useJsonLd({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'BeanAtlas', item: 'https://beanatlas.net/' },
+    { '@type': 'ListItem', position: 2, name: '産地一覧', item: 'https://beanatlas.net/origins' },
+  ],
 })
 
 const sortOptions: { value: SortKey; labelKey: 'sortDefault' | 'altitude' }[] = [
