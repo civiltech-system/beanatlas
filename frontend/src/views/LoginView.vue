@@ -109,7 +109,7 @@ async function submit() {
       <form class="space-y-4" @submit.prevent="submit">
         <label class="block text-sm text-coffee-600">
           メールアドレス
-          <input v-model.trim="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" :spellcheck="false" required class="mt-1 w-full rounded-lg border border-coffee-200 bg-coffee-50 px-3 py-2 outline-none focus:border-coffee-400" />
+          <input v-model.trim="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" :spellcheck="false" required class="mt-1 w-full rounded-lg border border-coffee-200 bg-coffee-50 px-3 py-2 outline-none focus:border-coffee-400" />
         </label>
         <label class="block text-sm text-coffee-600">
           パスワード
