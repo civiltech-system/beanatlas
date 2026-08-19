@@ -12,12 +12,15 @@
       <nav class="hidden sm:flex items-center gap-6 text-sm text-coffee-500">
         <RouterLink to="/" class="hover:text-coffee-600 transition-colors">{{ t('nav.map') }}</RouterLink>
         <RouterLink to="/origins" class="hover:text-coffee-600 transition-colors">{{ t('nav.origins') }}</RouterLink>
+        <RouterLink v-if="auth.user" to="/records" class="hover:text-coffee-600 transition-colors">飲んだ記録</RouterLink>
         <a
           href="https://github.com/civiltech-system/BeanAtlas"
           target="_blank"
           rel="noopener"
           class="hover:text-coffee-600 transition-colors"
         >GitHub</a>
+        <button v-if="auth.user" class="hover:text-coffee-600 transition-colors" @click="logout">ログアウト</button>
+        <RouterLink v-else to="/login" class="rounded bg-coffee-600 px-3 py-1.5 text-white hover:bg-coffee-500 transition-colors">ログイン</RouterLink>
         <button
           @click="toggle"
           class="text-xs border border-coffee-300 rounded px-2 py-0.5 hover:border-coffee-500 hover:text-coffee-600 transition-colors"
@@ -61,12 +64,15 @@
       >
         <RouterLink to="/" class="hover:text-coffee-600 transition-colors" @click="menuOpen = false">{{ t('nav.map') }}</RouterLink>
         <RouterLink to="/origins" class="hover:text-coffee-600 transition-colors" @click="menuOpen = false">{{ t('nav.origins') }}</RouterLink>
+        <RouterLink v-if="auth.user" to="/records" class="hover:text-coffee-600 transition-colors" @click="menuOpen = false">飲んだ記録</RouterLink>
         <a
           href="https://github.com/civiltech-system/BeanAtlas"
           target="_blank"
           rel="noopener"
           class="hover:text-coffee-600 transition-colors"
         >GitHub</a>
+        <button v-if="auth.user" class="self-start hover:text-coffee-600 transition-colors" @click="logout">ログアウト</button>
+        <RouterLink v-else to="/login" class="self-start rounded bg-coffee-600 px-3 py-1.5 text-white" @click="menuOpen = false">ログイン</RouterLink>
         <button
           @click="toggle"
           class="self-start text-xs border border-coffee-300 rounded px-2 py-0.5 hover:border-coffee-500 hover:text-coffee-600 transition-colors"
@@ -91,8 +97,18 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useLocale } from '@/composables/useLocale'
+import { useAuthStore } from '@/stores/auth'
 
 const { locale, t, toggle } = useLocale()
 const menuOpen = ref(false)
+const auth = useAuthStore()
+const router = useRouter()
+
+async function logout() {
+  await auth.logout()
+  menuOpen.value = false
+  await router.push('/')
+}
 </script>

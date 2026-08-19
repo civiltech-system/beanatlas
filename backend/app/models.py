@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, String, Text, Float
+from datetime import datetime
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, Float
 from .database import Base
 
 
@@ -25,3 +27,20 @@ class Origin(Base):
     description_ja = Column(Text, default="")
     slug = Column(String, unique=True, nullable=False, index=True)
     data_source = Column(String, default="")
+
+
+class CoffeeRecord(Base):
+    __tablename__ = "coffee_record"
+
+    id = Column(Integer, primary_key=True, index=True)
+    firebase_uid = Column(String, nullable=False, index=True)
+    origin_id = Column(Integer, ForeignKey("coffee_origin.id"), nullable=True)
+    coffee_name = Column(String, nullable=False)
+    roaster = Column(String, default="")
+    drank_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    brew_method = Column(String, default="")
+    roast_level = Column(String, default="")
+    rating = Column(Integer, nullable=False, default=3)
+    notes = Column(Text, default="")
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
-from .routers import origins
+from .routers import origins, records
 from . import seed
 
 app = FastAPI(title="BeanAtlas API", version="0.1.0")
@@ -13,7 +13,7 @@ app.add_middleware(
         "https://beanatlas.net",
         "https://www.beanatlas.net",
     ],
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -21,6 +21,7 @@ Base.metadata.create_all(bind=engine)
 seed.run()
 
 app.include_router(origins.router)
+app.include_router(records.router)
 
 
 @app.get("/api/v1/health")
