@@ -31,7 +31,7 @@ const { locale, translateTerm } = useLocale()
         v-for="note in origin.flavor_notes.slice(0, 3)"
         :key="note"
         class="bg-coffee-100 text-coffee-500 text-xs px-2 py-0.5 rounded-full"
-      >{{ note }}</span>
+      >{{ translateTerm(note) }}</span>
     </div>
   </RouterLink>
 </template>
